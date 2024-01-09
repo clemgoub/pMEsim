@@ -21,7 +21,7 @@ parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference
 parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed') # same bed to take the INS coordinates
-parser.add_argument('-b', '--bed2', type=str, metavar='STR', help='bed file with simRef TEs to delete', dest = 'bed2_in', default = 'ins2del.bed') # new bed to take the DEL coordinates
+parser.add_argument('-B', '--bed2', type=str, metavar='STR', help='bed file with simRef TEs to delete', dest = 'bed2_in', default = 'ins2del.bed') # new bed to take the DEL coordinates
 parser.add_argument('-R', '--tsdrange', type = list_of_ints, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
 parser.add_argument('-o', '--out', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix', default = 'simAlt')
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
@@ -62,11 +62,9 @@ if in_ins_nb < ins_nb:
     parser.print_help(sys.stderr)
     sys.exit(1)
 
-# # sample the deletions according to predefined proportions
-# d_alu = bed_in[bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('Alu') & (bed_in['end']-bed_in['start'] >= 250)].sample(round(max(del_nb*te_props[0],1)))
-# d_line = bed_in[bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('L1') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(del_nb*te_props[1],1)))
-# d_sva = bed_in[bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('SVA') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(del_nb*te_props[2],1)))
-# bed_del = pandas.concat([d_alu, d_line, d_sva], axis=0).reset_index().sort_values(by=['chrom', 'start'])
+# read and store the loci to delete from ins2del.bed
+bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
+                          names = ['chrom', 'start', 'end', 'TE', 'score', 'strand', 'TSD'])
 
 # sample the insertions (future deletions) according to predefined proportions
 i_alu = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('Alu') & (bed_in['end']-bed_in['start'] >= 250)].sample(round(max(ins_nb*te_props[0],1)))
