@@ -1,0 +1,5 @@
+ins2del.bed
+simRef.refseq2simseq.INDEL.vcf
+simRef.refseq2simseq.map.txt
+simRef.simseq.genome.fa
+simRef.vcf
