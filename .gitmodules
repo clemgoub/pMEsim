@@ -1,0 +1,3 @@
+[submodule "simuG"]
+	path = simuG
+	url = https://github.com/yjx1217/simuG.git
