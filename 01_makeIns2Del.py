@@ -22,7 +22,7 @@ parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name 
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = '../simData/hg38.chr22.fa')
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed')
 parser.add_argument('-R', '--tsdrange', type = list_of_ints, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
-parser.add_argument('-o', '--out', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix', default = 'sim')
+parser.add_argument('-o', '--out', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix', default = 'simRef')
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
 # parse the arguments
 args = parser.parse_args()
@@ -341,19 +341,30 @@ for index, repeat in repmask_subset.iterrows():
 # close the VCF file (write it)
 writer.close()
 
-# #######################
-# # simulate with simuG #
-# #######################
-# # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
-# # Github https://github.com/yjx1217/simuG (MIT license)
-# simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
-# print('simulating genome [simuG]...')
-# if not args.verbose:
-#     simug_process = subprocess.Popen(str(simug_cmd), 
-#         shell = True, 
-#         stdout=subprocess.DEVNULL,
-#         stderr=subprocess.STDOUT)
-# else:
-#     simug_process = subprocess.Popen(str(simug_cmd), 
-#         shell = True)
-# simug_process.wait()
+#######################
+# simulate with simuG #
+#######################
+# simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
+# Github https://github.com/yjx1217/simuG (MIT license)
+simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
+print('simulating genome [simuG]...')
+if not args.verbose:
+    simug_process = subprocess.Popen(str(simug_cmd), 
+        shell = True, 
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT)
+else:
+    simug_process = subprocess.Popen(str(simug_cmd), 
+        shell = True)
+simug_process.wait()
+
+# report the new coordinates in bed format to delete in the next step
+if args.verbose:
+    print("saving ins2del coordinates in .bed")
+# wrapping a bash 1-liner in sooooo many python lines! =)
+command = "paste <(awk 'NR > 1' simRef.refseq2simseq.map.txt | sort -k12,12 | cut -f 6-8) <(grep -v '#' simRef.vcf | sort -k3,3 | cut -f 8) | sed 's/repClass=//g;s/;SVLEN=/\\t/g;s/;TSD=/\\t/g' | awk '{print $1\"\\t\"$2\"\\t\"$3\"\\t\"$4\"\\t1000\\t.\\t\"$6}' > ins2del.bed"
+#command = """bash -c "paste <(awk 'NR > 1' simRef.refseq2simseq.map.txt | cut -f 6-8) <(grep -v '#' simRef.vcf | cut -f 8) | sed 's/repClass=//g;s/;SVLEN=/\t/g;s/;TSD=/\t/g' | awk '{print \\$1\"\t\"\\$2\"\t\"\\$3\"\t\"\\$4\"\t1000\t\\.\t\"$6}' > ins2del.bed" """
+
+# Execute the commands and capture the output
+subprocess.run(command, shell=True, text=True, executable='/bin/bash')
+#output.wait()
