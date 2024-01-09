@@ -1,0 +1,32 @@
+##fileformat=VCFv4.2 
+##reference=hg38
+##contig=<ID=chr1,length=248956422,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr2,length=242193529,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr3,length=198295559,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr4,length=190214555,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr5,length=181538259,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr6,length=170805979,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr7,length=159345973,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr8,length=145138636,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr9,length=138394717,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr10,length=133797422,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr11,length=135086622,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr12,length=133275309,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr13,length=114364328,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr14,length=107043718,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr15,length=101991189,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr16,length=90338345,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr17,length=83257441,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr18,length=80373285,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr19,length=58617616,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr20,length=64444167,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr21,length=46709983,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chr22,length=50818468,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chrX,length=156040895,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##contig=<ID=chrY,length=57227415,assembly=human_GRCh38_no_alt_analysis_set.fasta>
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=repClass,Number=1,Type=String,Description="TE name">
+##INFO=<ID=TSD,Number=1,Type=String,Description="TSD sequence">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="Length of insertion(+)/deletion(-) in bp">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample
