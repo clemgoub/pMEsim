@@ -3,3 +3,9 @@ simRef.refseq2simseq.INDEL.vcf
 simRef.refseq2simseq.map.txt
 simRef.simseq.genome.fa
 simRef.vcf
+bedcheck.bed
+simAlt.refseq2simseq.INDEL.vcf
+simAlt.refseq2simseq.map.txt
+simAlt.simseq.genome.fa
+simAlt.vcf
+simRef.simseq.genome.fa.fai
