@@ -37,7 +37,7 @@ else:
     nb_var = args.nb_var + 1
     print("warning: you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
-target_fasta = args.target_fasta
+t_fasta = args.target_fasta
 target_chrom = args.target_chrom
 out_prefix = args.out_prefix
 # force the Alu, L1, SVA ratio to realistic values
@@ -48,6 +48,8 @@ ins_nb = round(ratio*nb_var)
 # del_nb = nb_var - ins_nb #round(nb_var-(ratio*nb_var))
 # load the reference genome
 fasta = pysam.FastaFile(ref_genome)
+# load the target genome (simRef)
+target_fasta = pysam.FastaFile(t_fasta)
 # read and store the input bed file
 bed_in_pre = pandas.read_csv(args.bed_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand'])
@@ -128,9 +130,11 @@ for index, repeat in bed_ins.iterrows():
         # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
         ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
     # now we need to add the TSD. We pick a random number within the tsd range
+    tsdrange = args.tsdrange
     tsdR = range(tsdrange[0], tsdrange[1], 1) # we first make a range based on user input
     tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
-    tsdSeq = current_chrom_seq[end : end + int(tsdL)]
+    #tsdSeq = current_chrom_seq[end : end + int(tsdL)]
+    tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
     if args.verbose:
         print("TSD = " + tsdSeq)
     # get the sequence of the TE from the bed file, add the ref bp to if in 5', this is our alternative sequence
@@ -148,6 +152,9 @@ for index, repeat in bed_ins.iterrows():
                         vcfpy.Call(sample = "sim",
                                     data = vcfpy.OrderedDict(GT = 1))]
                    )
+    if args.verbose:
+        print(rec)
+        print("writing record...")
     # write the line
     writer.write_record(rec)
     # store the position used
@@ -165,7 +172,7 @@ for index, repeat in bed_del.iterrows():
     TE = repeat['TE']
     # update in memory chromosome sequence
     current_chrom = chrom
-    current_chrom_seq = fasta[current_chrom]
+    current_chrom_seq = target_fasta[current_chrom]
     print("creating deletions in: " + target_chrom + '...')
     # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
     # end is 1-based, so we -1 it to get the right position in the string
@@ -181,6 +188,9 @@ for index, repeat in bed_del.iterrows():
                         vcfpy.Call(sample = "sim",
                                     data = vcfpy.OrderedDict(GT = 1))]
                    )
+    if args.verbose:
+        print(rec)
+        print("writing record...")
     # write the line
     writer.write_record(rec)
     # store the position used
@@ -218,7 +228,7 @@ randit_table = pandas.DataFrame(zip(randit_chr, randit_len), columns = ['SVchr',
 # create an empty table to store the validated random intervals
 val_rnd = pandas.DataFrame(columns=['chrom', 'start', 'end', 'name', 'type', 'ins_site'])
 # gather the list of simulated deletions
-dels = repmask_subset[repmask_subset['chrom'].isin(list(target_chrom))]
+dels = bed_del #repmask_subset[repmask_subset['chrom'].isin(list(target_chrom))]
 # iterate the random intervals table to validate them (i.e.: check they don't intersect a simulated deletion)
 for index, rnd in randit_table.iterrows():
     chrom = rnd['SVchr']
@@ -293,7 +303,7 @@ for index, repeat in val_rnd.iterrows():
             print("creating background deletions in: " + target_chrom + '...')
         # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
         # end is 1-based, so we -1 it to get the right position in the string
-        ref_sequence = current_chrom_seq[start - 1 : end - 1]
+        ref_sequence = target_fasta[start - 1 : end - 1]
         alt_sequence = ref_sequence[0]
         rep_class = repeat['type']
 
@@ -306,6 +316,9 @@ for index, repeat in val_rnd.iterrows():
                             vcfpy.Call(sample = "sim",
                                         data = vcfpy.OrderedDict(GT = 1))]
                        )
+        if args.verbose:
+            print(rec)
+            print("writing record...")
         # write the line
         writer.write_record(rec)
         # store the position used
@@ -332,6 +345,9 @@ for index, repeat in val_rnd.iterrows():
                             vcfpy.Call(sample = "sim",
                                         data = vcfpy.OrderedDict(GT = 1))]
                        )
+        if args.verbose:
+            print(rec)
+            print("writing record...")
         # write the line
         writer.write_record(rec)
         # store the position used
