@@ -70,9 +70,8 @@ bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
 i_alu = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('Alu') & (bed_in['end']-bed_in['start'] >= 250)].sample(round(max(ins_nb*te_props[0],1)))
 i_line = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('L1') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(ins_nb*te_props[1],1)))
 i_sva = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('SVA') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(ins_nb*te_props[2],1)))
-# here I replaced "bed_ins" with "repmask_subset", as it is the file used later and I don't want to change names
-repmask_subset = pandas.concat([i_alu, i_line, i_sva], axis=0).reset_index().sort_values(by=['chrom', 'start'])
-# concatenate
+bed_ins = pandas.concat([i_alu, i_line, i_sva], axis=0).reset_index().sort_values(by=['chrom', 'start'])
+# concatenate | no we don't anymore. We will treat ins and del separately
 # repmask_subset = pandas.concat([bed_del, bed_ins], axis=0).reset_index().sort_values(by=['chrom', 'start'])
 if args.verbose:
     print(bed_ins)
@@ -87,8 +86,7 @@ writer = vcfpy.Writer.from_path(out_prefix + '.vcf', reader.header)
 #########################
 # Simulate TE ins / del #
 #########################
-# subset the bed file (repmask) for the chromosomes present in the reference genome
-# repmask_subset = repmask[repmask['chrom'].isin(fasta.references) ]
+print('creating pMEI insertions/deletions VCF entries...')
 # initialize the current chromosome and its sequence
 current_chrom = None
 current_chrom_seq = None
@@ -96,55 +94,36 @@ current_chrom_seq = None
 target_chrom_seq = fasta[target_chrom]
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
-# loop over each line of the bed file
-print('creating pMEI insertions/deletions VCF entries...')
+### INSERTIONS ###
+# loop over each line of the insertions bed file
+print('starting with insertions')
 if args.verbose:
-    print(repmask_subset)
-for index, repeat in repmask_subset.iterrows():
+    print(bed_ins)
+# create a blacklist of ranges that contains the TE to delete, so we don't insert in there
+# init a blacklist of position
+forbidden=[]
+# we will create ranges of ints that correspond to the content of the ranges
+for index, line in bed_del.iterrows():
+    linerange=range(line['start'], line['end'],1)
+    forbidden.append(list(linerange)) # need to convert the ranges into lists
+# now we loop over the sampled insertions
+for index, repeat in bed_ins.iterrows():
     chrom = repeat['chrom']
     start = repeat['start']
     end = repeat['end']
-
     # update in memory chromosome sequence
-    if current_chrom != chrom:
-        #print("Switching to " + chrom)
-        current_chrom = chrom
-        current_chrom_seq = fasta[current_chrom]
-    
-    # we skip the next part because we don't want to make deletion at this point
-
-    # # if the bed chromosome is the same as the target chromosome, we will do a deletion
-    # if current_chrom == target_chrom:    
-    #     # for each line, update the reference and alternative sequence
-    #     if args.verbose:
-    #         print("creating deletions in: " + target_chrom + '...')
-    #     # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
-    #     # end is 1-based, so we -1 it to get the right position in the string
-    #     ref_sequence = current_chrom_seq[start - 1 : end - 1]
-    #     alt_sequence = ref_sequence[0]
-    #     rep_class = repeat['TE']
-
-    #     # create the VCF line
-    #     rec = vcfpy.Record(CHROM = chrom, POS = start, ID = ['pMEI_DEL_' + chrom + "_" + str(start) + "_" + str(end)],
-    #                        REF = ref_sequence, ALT = [vcfpy.Substitution("DEL", alt_sequence)],
-    #                        QUAL = 999, FILTER = ["PASS"], INFO = {"repClass" : rep_class, "SVLEN" : - (end - start)},
-    #                        FORMAT = ["GT"],
-    #                     calls = [
-    #                         vcfpy.Call(sample = "sim",
-    #                                     data = vcfpy.OrderedDict(GT = 1))]
-    #                    )
-    #     # write the line
-    #     writer.write_record(rec)
-    #     # store the position used
-    #     sim_pos.append(start)
-    # # else, we will do a random insertion
-    # else:
+    # if current_chrom != chrom: (THIS IS ALWAYS TRUE NOW, SO REMOVE)
+    current_chrom = chrom
+    current_chrom_seq = fasta[current_chrom]
     if args.verbose:
         print("creating insertions from: " + chrom + '...')
     # pick a random position within the target chromosome, avoid N
     ref_sequence = 'N'
     while ref_sequence == 'N':
         rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
+        # check it's not a position in the blacklist
+        while rnd_pos in forbidden:
+            rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
         # get the 1 base at the site, will be the reference sequence
         # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
         ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
@@ -173,6 +152,39 @@ for index, repeat in repmask_subset.iterrows():
     writer.write_record(rec)
     # store the position used
     sim_pos.append(rnd_pos)
+
+### DELETIONS ###
+if args.verbose:
+    print("now processing deletions")
+    print(bed_del)
+for index, repeat in bed_del.iterrows():
+    chrom = repeat['chrom']
+    start = repeat['start']
+    end = repeat['end']
+    tsdSeq = repeat['TSD']
+    TE = repeat['TE']
+    # update in memory chromosome sequence
+    current_chrom = chrom
+    current_chrom_seq = fasta[current_chrom]
+    print("creating deletions in: " + target_chrom + '...')
+    # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
+    # end is 1-based, so we -1 it to get the right position in the string
+    ref_sequence = current_chrom_seq[start - 1 : end - 1]
+    alt_sequence = ref_sequence[0]
+    rep_class = repeat['TE']
+    # create the VCF line
+    rec = vcfpy.Record(CHROM = chrom, POS = start, ID = ['pMEI_DEL_' + chrom + "_" + str(start) + "_" + str(end)],
+                       REF = ref_sequence, ALT = [vcfpy.Substitution("DEL", alt_sequence)],
+                       QUAL = 999, FILTER = ["PASS"], INFO = {"repClass" : rep_class, "SVLEN" : - (end - start), "TSD" : tsdSeq},
+                       FORMAT = ["GT"],
+                    calls = [
+                        vcfpy.Call(sample = "sim",
+                                    data = vcfpy.OrderedDict(GT = 1))]
+                   )
+    # write the line
+    writer.write_record(rec)
+    # store the position used
+    sim_pos.append(start)
 
 #############################
 # simulate random intervals #
