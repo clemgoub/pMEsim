@@ -17,7 +17,7 @@ def list_of_ints(arg):
 parser = argparse.ArgumentParser(description='Create a simulated VCF file with random TE insertions or deletions')
 parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total number of variants to simulate', dest = 'nb_var', default = 100)
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .7)
-parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta.gz')
+parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/hg38.UCSC.1to22XY.fa.gz')
 parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = '../simData/hg38.chr22.fa')
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed')

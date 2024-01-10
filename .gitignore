@@ -9,3 +9,4 @@ simAlt.refseq2simseq.map.txt
 simAlt.simseq.genome.fa
 simAlt.vcf
 simRef.simseq.genome.fa.fai
+checkbed.bed

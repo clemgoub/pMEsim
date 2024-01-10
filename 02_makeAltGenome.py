@@ -17,7 +17,7 @@ def list_of_ints(arg):
 parser = argparse.ArgumentParser(description='Create a simulated VCF file with random TE insertions or deletions')
 parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total number of variants to simulate', dest = 'nb_var', default = 100)
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .7)
-parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta.gz') # same ref genome to get the INS TE from
+parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/hg38.UCSC.1to22XY.fa.gz') # same ref genome to get the INS TE from
 parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed') # same bed to take the INS coordinates
@@ -297,13 +297,17 @@ for index, repeat in val_rnd.iterrows():
         current_chrom = chrom
         current_chrom_seq = fasta[current_chrom]
     # if the bed chromosome is the same as the target chromosome, we will do a deletion
-    if current_chrom == target_chrom:    
+    if current_chrom == target_chrom:
         # for each line, update the reference and alternative sequence
         if args.verbose:
             print("creating background deletions in: " + target_chrom + '...')
+            # print("chrom: " + chrom)
+            # print("start: " + str(start))
+            # print("end: " + str(end))
+        current_chrom_seq = target_fasta[current_chrom] 
         # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
         # end is 1-based, so we -1 it to get the right position in the string
-        ref_sequence = target_fasta[start - 1 : end - 1]
+        ref_sequence = current_chrom_seq[start - 1 : end - 1]
         alt_sequence = ref_sequence[0]
         rep_class = repeat['type']
 
