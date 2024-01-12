@@ -3,6 +3,7 @@
 import argparse
 import sys
 import subprocess
+import os
 
 # arguments for the wrapper (this script)
 ## common arguments
@@ -24,6 +25,12 @@ parser.add_argument('-O', '--out2', type=str, metavar='STR', help='output file p
 # parse the arguments
 args = parser.parse_args()
 
+# we need to clean the working directory
+if args.verbose:
+    print("cleaning up last session...")
+for filename in glob.glob('./sim*'):
+    os.remove(filename)
+
 ### according to verbose or not, we have two ways per command:
 if args.verbose:
     command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1) + " -V")
@@ -36,14 +43,14 @@ else:
 if args.verbose:
     print("running script 1...")
     print(command01)
-subprocess.call(str(command01), 
+subprocess.run(str(command01), 
         shell = True, 
-        stdout=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
 if args.verbose:
     print("running script 2...")
     print(command02)
-subprocess.call(str(command02), 
+subprocess.run(str(command02), 
         shell = True, 
-        stdout=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
