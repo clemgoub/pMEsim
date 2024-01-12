@@ -301,9 +301,9 @@ for index, repeat in val_rnd.iterrows():
         # for each line, update the reference and alternative sequence
         if args.verbose:
             print("creating background deletions in: " + target_chrom + '...')
-            # print("chrom: " + chrom)
-            # print("start: " + str(start))
-            # print("end: " + str(end))
+            print("chrom: " + chrom)
+            print("start: " + str(start))
+            print("end: " + str(end))
         current_chrom_seq = target_fasta[current_chrom] 
         # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
         # end is 1-based, so we -1 it to get the right position in the string
