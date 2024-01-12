@@ -57,15 +57,17 @@ if args.verbose:
     print("running script 1...")
     print(command01)
 script1 = subprocess.Popen(str(command01), 
-    shell = True, 
-    stdout=subprocess.DEVNULL,
-    stderr=subprocess.STDOUT)
+    shell = True#, 
+    #stdout=subprocess.DEVNULL,
+    #stderr=subprocess.STDOUT
+    )
 script1.wait()
 if args.verbose:
     print("running script 2...")
     print(command02)
 script2 = subprocess.Popen(str(command02), 
-    shell = True, 
-    stdout=subprocess.DEVNULL,
-    stderr=subprocess.STDOUT)
+    shell = True#, 
+    #stdout=subprocess.DEVNULL,
+    #stderr=subprocess.STDOUT
+    )
 script2.wait()
