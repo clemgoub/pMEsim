@@ -367,7 +367,7 @@ writer.close()
 #######################
 # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
 # Github https://github.com/yjx1217/simuG (MIT license)
-simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
+simug_cmd = str("perl simuG/simuG.pl -refseq " + str(t_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
 print('simulating genome [simuG]...')
 if not args.verbose:
     simug_process = subprocess.Popen(str(simug_cmd), 
