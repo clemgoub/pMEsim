@@ -30,10 +30,19 @@ args = parser.parse_args()
 if args.verbose:
     print("cleaning up last session...")
 for filename in glob.glob('./simRef*'):
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
 for filename in glob.glob('./simAlt*'):
-    os.remove(filename)
-os.remove('ins2del.bed')
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+try:
+    os.remove('ins2del.bed')
+except OSError:
+    pass
 
 ### according to verbose or not, we have two ways per command:
 if args.verbose:
