@@ -93,7 +93,7 @@ print('creating pMEI insertions/deletions VCF entries...')
 current_chrom = None
 current_chrom_seq = None
 # define which chromosome will receive the annotations
-target_chrom_seq = fasta[target_chrom]
+target_chrom_seq = target_fasta[target_chrom]
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 ### INSERTIONS ###
@@ -122,10 +122,10 @@ for index, repeat in bed_ins.iterrows():
     # pick a random position within the target chromosome, avoid N
     ref_sequence = 'N'
     while ref_sequence == 'N':
-        rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
+        rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom))
         # check it's not a position in the blacklist
         while rnd_pos in forbidden:
-            rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
+            rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom))
         # get the 1 base at the site, will be the reference sequence
         # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
         ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
@@ -205,10 +205,10 @@ print('creating background insertions/deletions VCF entries...')
 # they must not be already occupied by a simulated pMEI
 randit_pos = []
 for i in range(nb_var):
-    j = random.randint(1,fasta.get_reference_length(target_chrom))
+    j = random.randint(1,target_fasta.get_reference_length(target_chrom))
     ref_sequence = target_chrom_seq[j - 1]
     while ref_sequence == 'N' or j in sim_pos:
-        j = random.randint(1,fasta.get_reference_length(target_chrom))
+        j = random.randint(1,target_fasta.get_reference_length(target_chrom))
         ref_sequence = target_chrom_seq[j - 1]
     randit_pos.append(j)
 
@@ -249,7 +249,7 @@ for index, rnd in randit_table.iterrows():
                     # we retry
                     if args.verbose:
                         print('intersect simulated del ' + str(dels['start'].values[i-1]) + ' ' + str(dels['end'].values[i-1]) + ' Regenerate breakpoint...')
-                    start = random.randint(rndlen + 1,fasta.get_reference_length(chrom) - rndlen)
+                    start = random.randint(rndlen + 1,target_fasta.get_reference_length(chrom) - rndlen)
                     test = 'false'
                     break
                 else:
@@ -331,6 +331,8 @@ for index, repeat in val_rnd.iterrows():
     else:
         if args.verbose:
             print("creating background insertions from: " + chrom + '...')
+        current_chrom = chrom
+        current_chrom_seq = fasta[current_chrom]
         rnd_pos = start
         # get the 1 base at the site, will be the reference sequence
         # we assume rnd_pos is 1-based. Thus we -1 it to get it in python
