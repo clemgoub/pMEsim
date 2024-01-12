@@ -52,18 +52,20 @@ else:
     command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1))
     command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
 
-### to change
+### actually run the scripts
 if args.verbose:
     print("running script 1...")
     print(command01)
-subprocess.Popen(str(command01), 
-        shell = True, 
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
+script1 = subprocess.Popen(str(command01), 
+    shell = True, 
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT)
+script1.wait()
 if args.verbose:
     print("running script 2...")
     print(command02)
-subprocess.Popen(str(command02), 
-        shell = True, 
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
+script2 = subprocess.Popen(str(command02), 
+    shell = True, 
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT)
+script2.wait()
