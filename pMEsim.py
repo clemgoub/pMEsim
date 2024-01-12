@@ -47,14 +47,14 @@ else:
 if args.verbose:
     print("running script 1...")
     print(command01)
-subprocess.run(str(command01), 
-        text = True, 
+subprocess.Popen(str(command01), 
+        shell = True, 
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
 if args.verbose:
     print("running script 2...")
     print(command02)
-subprocess.run(str(command02), 
-        text = True, 
+subprocess.Popen(str(command02), 
+        shell = True, 
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
