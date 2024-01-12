@@ -58,7 +58,7 @@ if args.verbose:
     print(command01)
 script1 = subprocess.Popen(str(command01), 
     shell = True, 
-    stdout=subprocess.PIPE,
+    stdout=subprocess.DEVNULL,
     stderr=subprocess.STDOUT)
 script1.wait()
 if args.verbose:
@@ -66,6 +66,6 @@ if args.verbose:
     print(command02)
 script2 = subprocess.Popen(str(command02), 
     shell = True, 
-    stdout=subprocess.PIPE,
+    stdout=subprocess.DEVNULL,
     stderr=subprocess.STDOUT)
 script2.wait()
