@@ -48,13 +48,13 @@ if args.verbose:
     print("running script 1...")
     print(command01)
 subprocess.run(str(command01), 
-        shell = True, 
+        text = True, 
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
 if args.verbose:
     print("running script 2...")
     print(command02)
 subprocess.run(str(command02), 
-        shell = True, 
+        text = True, 
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
