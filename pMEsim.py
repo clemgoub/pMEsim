@@ -5,6 +5,13 @@ import sys
 import subprocess
 import os
 import glob
+import datetime
+from pathlib import Path
+
+# Create a timestamp
+def stamp():
+    t=str(datetime.datetime.now().strftime("[%Y-%M-%d %H:%M:%S]"))
+    return(t)
 
 # arguments for the wrapper (this script)
 ## common arguments
@@ -16,6 +23,7 @@ parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name 
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed')
 parser.add_argument('-R', '--tsdrange', type = str, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
+parser.add_argument('-d', '--out-dir', type = str, metavar='STR', help='directory to store the simulation\'s output -- will create if doesn\'t exist', dest = 'out_dir', default = 'out')
 ## 01-specific arguments
 parser.add_argument('-f', '--target_fasta1', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta1', default = '../simData/hg38.chr22.fa') # first step the target is a the ref genome chromosome 22
 parser.add_argument('-o', '--out1', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix1', default = 'simRef')
@@ -71,3 +79,19 @@ script2 = subprocess.Popen(str(command02),
     #stderr=subprocess.STDOUT
     )
 script2.wait()
+
+### organize the outputs
+out_d = args.out_dir
+# create dir, equivalent to bash `mkdir -P`
+try:
+    Path(out_d).mkdir(parents=True, exist_ok=True)
+except OSError:
+    print('[ERROR!]' + stamp() + 'output dir: ' + out_d + ' cannot be created')
+    exit()
+# move the files
+for filename in glob.glob('simRef*'):
+    os.replace(filename, out_d + "/" + filename)
+for filename in glob.glob('simAlt*'):
+    os.replace(filename, out_d + "/" + filename)
+os.replace('ins2del.bed', out_d + '/ins2del.bed')
+
