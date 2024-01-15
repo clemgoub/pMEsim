@@ -14,6 +14,10 @@ import time
 # Define a custom argument type for a list of integers
 def list_of_ints(arg):
     return list(map(int, arg.split(',')))
+# Create a timestamp
+def stamp():
+    t=str(datetime.datetime.now().strftime("[%Y-%M-%d %H:%M:%S]"))
+    return(t)
 
 # create the parser for the user input
 parser = argparse.ArgumentParser(description='Create a simulated VCF file with random TE insertions or deletions')
@@ -35,7 +39,7 @@ if (args.nb_var % 2) == 0:
     nb_var = args.nb_var
 else:
     nb_var = args.nb_var + 1
-    print("[WARNING] you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
+    print("[WARNING]" +  stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 target_fasta = args.target_fasta
 target_chrom = args.target_chrom
@@ -66,7 +70,7 @@ in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
 # here we want to use the del number from the ration, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
 if in_del_nb < ins_nb:
     print('*******')
-    print('[ERROR!] not enough TEs in the bed file to insert in the target chromosome!')
+    print('[ERROR!]' + stamp() + ' not enough TEs in the bed file to insert in the target chromosome!')
     print('*******')
     parser.print_help(sys.stderr)
     sys.exit(1)
@@ -102,7 +106,7 @@ target_chrom_seq = fasta[target_chrom]
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 # loop over each line of the bed file
-print('[info] creating new reference pMEI to delete in the next round...')
+print('[info]' + stamp() + ' creating new reference pMEI to delete in the next round...')
 if args.verbose:
     print(repmask_subset)
 with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') as bar:
@@ -165,7 +169,7 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
 # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
 # Github https://github.com/yjx1217/simuG (MIT license)
 simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
-print('[info] simulating genome [simuG]...')
+print('[info]' + stamp() + ' simulating genome [simuG]...')
 if not args.verbose:
     simug_process = subprocess.Popen(str(simug_cmd), 
         shell = True, 

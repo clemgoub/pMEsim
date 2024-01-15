@@ -14,6 +14,10 @@ import time
 # Define a custom argument type for a list of integers
 def list_of_ints(arg):
     return list(map(int, arg.split(',')))
+# Create a timestamp
+def stamp():
+    t=str(datetime.datetime.now().strftime("[%Y-%M-%d %H:%M:%S]"))
+    return(t)
 
 # create the parser for the user input
 parser = argparse.ArgumentParser(description='Create a simulated VCF file with random TE insertions or deletions')
@@ -37,7 +41,7 @@ if (args.nb_var % 2) == 0:
     nb_var = args.nb_var
 else:
     nb_var = args.nb_var + 1
-    print("[WARNING] you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
+    print("[WARNING]" + stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 t_fasta = args.target_fasta
 target_chrom = args.target_chrom
@@ -61,7 +65,7 @@ bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
 in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
 if in_ins_nb < ins_nb:
     print('*******')
-    print('[ERROR!] not enough TEs in the bed file to insert in the target chromosome!')
+    print('[ERROR!]' + stamp() + ' not enough TEs in the bed file to insert in the target chromosome!')
     print('*******')
     parser.print_help(sys.stderr)
     sys.exit(1)
@@ -90,7 +94,7 @@ writer = vcfpy.Writer.from_path(out_prefix + '.vcf', reader.header)
 #########################
 # Simulate TE ins / del #
 #########################
-print('[info] creating pMEI insertions/deletions VCF entries...')
+print('[info]' + stamp() + ' creating pMEI insertions/deletions VCF entries...')
 # initialize the current chromosome and its sequence
 current_chrom = None
 current_chrom_seq = None
@@ -100,7 +104,7 @@ target_chrom_seq = target_fasta[target_chrom]
 sim_pos = []
 ### INSERTIONS ###
 # loop over each line of the insertions bed file
-print('[info] starting with insertions...')
+print('[info]' + stamp() + ' starting with insertions...')
 if args.verbose:
     print(bed_ins)
 # create a blacklist of ranges that contains the TE to delete, so we don't insert in there
@@ -167,8 +171,9 @@ with alive_bar(len(bed_ins.index), bar = 'circles', spinner = 'classic') as bar:
         bar()
 
 ### DELETIONS ###
+
+print("[info]" + stamp() + " now processing deletions...")
 if args.verbose:
-    print("now processing deletions")
     print(bed_del)
 with alive_bar(len(bed_del.index), bar = 'circles', spinner = 'classic') as bar:
     for index, repeat in bed_del.iterrows():
@@ -180,7 +185,8 @@ with alive_bar(len(bed_del.index), bar = 'circles', spinner = 'classic') as bar:
         # update in memory chromosome sequence
         current_chrom = chrom
         current_chrom_seq = target_fasta[current_chrom]
-        print("creating deletions in: " + target_chrom + '...')
+        if args.verbose:
+            print("[info] creating deletions in: " + target_chrom + '...')
         # start is 0-based (bed), so no need to offset, but we need to pick 1 base before start to get the ref with the alt allele in 5'
         # end is 1-based, so we -1 it to get the right position in the string
         ref_sequence = current_chrom_seq[start - 1 : end - 1]
@@ -209,7 +215,7 @@ with alive_bar(len(bed_del.index), bar = 'circles', spinner = 'classic') as bar:
 # simulate random intervals #
 #############################
 
-print('[info] creating background insertions/deletions VCF entries...')
+print('[info]' + stamp() + ' creating background insertions/deletions VCF entries...')
 # create a list of random position on the target chrom
 # they must not be already occupied by a simulated pMEI
 randit_pos = []
@@ -273,6 +279,8 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
             row = {'chrom':chrom, 'start':start, 'end':end, 'name': 'sim' + str(index), 'type':'DEL', 'ins_site':ins_site}
             newline = pandas.DataFrame([row])
             val_rnd = pandas.concat([val_rnd, newline], axis = 0, ignore_index = True)
+            # increment progress bar
+            bar()
         else:
             start = random.randint(rndlen + 1,fasta.get_reference_length(chrom) - rndlen)
             # check if the interval we will create is not intersecting a TE deletion on the target chromosome!
@@ -298,7 +306,7 @@ if args.verbose:
     print(val_rnd)
 
 ##### Now write the bgSV in the VCF:
-print('[info] writing into VCF...')
+print('[info]' + stamp() + ' writing into VCF...')
 with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as bar:
     for index, repeat in val_rnd.iterrows():
         chrom = repeat['chrom']
@@ -341,6 +349,8 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
             writer.write_record(rec)
             # store the position used
             sim_pos.append(start)
+            # increment progress bar
+            bar()
         # else, we will do a random insertion
         else:
             if args.verbose:
@@ -383,7 +393,7 @@ writer.close()
 # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
 # Github https://github.com/yjx1217/simuG (MIT license)
 simug_cmd = str("perl simuG/simuG.pl -refseq " + str(t_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
-print('simulating genome [simuG]...')
+print('[info]' + stamp() + ' simulating genome [simuG]...')
 if not args.verbose:
     simug_process = subprocess.Popen(str(simug_cmd), 
         shell = True, 
