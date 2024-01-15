@@ -24,6 +24,7 @@ parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with 
 parser.add_argument('-R', '--tsdrange', type = str, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
 parser.add_argument('-d', '--out-dir', type = str, metavar='STR', help='directory to store the simulation\'s output -- will create if doesn\'t exist', dest = 'out_dir', default = 'out')
+parser.add_argument('-x', '--replicates', type = int, metavar='N', help='number of simulation to perform', dest = 'rep_nb', default = 1)
 ## 01-specific arguments
 parser.add_argument('-f', '--target_fasta1', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta1', default = '../simData/hg38.chr22.fa') # first step the target is a the ref genome chromosome 22
 parser.add_argument('-o', '--out1', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix1', default = 'simRef')
@@ -34,64 +35,110 @@ parser.add_argument('-O', '--out2', type=str, metavar='STR', help='output file p
 # parse the arguments
 args = parser.parse_args()
 
-# we need to clean the working directory
-if args.verbose:
-    print("cleaning up last session...")
-for filename in glob.glob('./simRef*'):
+def simulate():
+    # we need to clean the working directory
+    if args.verbose:
+        print("cleaning up last session...")
+    for filename in glob.glob('./simRef*'):
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
+    for filename in glob.glob('./simAlt*'):
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
     try:
-        os.remove(filename)
+        os.remove('ins2del.bed')
     except OSError:
         pass
-for filename in glob.glob('./simAlt*'):
-    try:
-        os.remove(filename)
-    except OSError:
-        pass
-try:
-    os.remove('ins2del.bed')
-except OSError:
-    pass
 
-### according to verbose or not, we have two ways per command:
-if args.verbose:
-    command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1) + " -V")
-    command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+    ### according to verbose or not, we have two ways per command:
+    if args.verbose:
+        command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1) + " -V")
+        command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+    else:
+        command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1))
+        command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
+
+    ### actually run the scripts
+    if args.verbose:
+        print("running script 1...")
+        print(command01)
+    script1 = subprocess.Popen(str(command01), 
+        shell = True#, 
+        #stdout=subprocess.DEVNULL,
+        #stderr=subprocess.STDOUT
+        )
+    script1.wait()
+    if args.verbose:
+        print("running script 2...")
+        print(command02)
+    script2 = subprocess.Popen(str(command02), 
+        shell = True#, 
+        #stdout=subprocess.DEVNULL,
+        #stderr=subprocess.STDOUT
+        )
+    script2.wait()
+
+# function to organize the output for a single run
+def organize():
+    ### organize the outputs
+    out_d = args.out_dir
+    # create dir, equivalent to bash `mkdir -P`
+    try:
+        Path(out_d).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        print('[ERROR!]' + stamp() + 'output dir: ' + out_d + ' cannot be created')
+        exit()
+    # move the files
+    for filename in glob.glob('simRef*'):
+        os.replace(filename, out_d + "/" + filename)
+    for filename in glob.glob('simAlt*'):
+        os.replace(filename, out_d + "/" + filename)
+    os.replace('ins2del.bed', out_d + '/ins2del.bed')
+
+# function to organize the output with replicates
+def organize_rep(iter):
+    ### organize the outputs
+    if iter == 1:
+        out_d = args.out_dir
+        # create dir, equivalent to bash `mkdir -P`
+        try:
+            Path(out_d).mkdir(parents=True, exist_ok=True)
+        except OSError:
+            print('[ERROR!]' + stamp() + 'output dir: ' + out_d + ' cannot be created')
+            exit()
+        # create the first subdir
+        try:
+            Path(out_d + "/rep" + str(iter)).mkdir(parents=True, exist_ok=True)
+        except OSError:
+            print('[ERROR!]' + stamp() + 'output dir: ' + out_d + "/rep" + str(iter) + ' cannot be created')
+            exit()            
+        # and write the ouput
+        for filename in glob.glob('simRef*'):
+            os.replace(filename, out_d + "/rep" + str(iter) + "/" + filename)
+        for filename in glob.glob('simAlt*'):
+            os.replace(filename, out_d + "/rep" + str(iter) + "/" + filename)
+        os.replace('ins2del.bed', out_d + "/rep" + str(iter) + "/ins2del.bed")
+    else:
+    # simply move the files in the out_dir
+        for filename in glob.glob('simRef*'):
+            os.replace(filename, out_d + "/rep" + str(iter) + "/" + filename)
+        for filename in glob.glob('simAlt*'):
+            os.replace(filename, out_d + "/rep" + str(iter) + "/" + filename)
+        os.replace('ins2del.bed', out_d + "/rep" + str(iter) + "/ins2del.bed")
+
+# check how many replicates
+reps = args.rep_nb
+if reps == 1:
+    simulate()
+    organize()
 else:
-    command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta1) + " -o " + str(args.out_prefix1))
-    command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(args.ratio) + " -g " + str(args.ref_genome) + " -t " + str(args.target_chrom) + " -b " + str(args.bed_in) + " -R " + str(args.tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
-
-### actually run the scripts
-if args.verbose:
-    print("running script 1...")
-    print(command01)
-script1 = subprocess.Popen(str(command01), 
-    shell = True#, 
-    #stdout=subprocess.DEVNULL,
-    #stderr=subprocess.STDOUT
-    )
-script1.wait()
-if args.verbose:
-    print("running script 2...")
-    print(command02)
-script2 = subprocess.Popen(str(command02), 
-    shell = True#, 
-    #stdout=subprocess.DEVNULL,
-    #stderr=subprocess.STDOUT
-    )
-script2.wait()
-
-### organize the outputs
-out_d = args.out_dir
-# create dir, equivalent to bash `mkdir -P`
-try:
-    Path(out_d).mkdir(parents=True, exist_ok=True)
-except OSError:
-    print('[ERROR!]' + stamp() + 'output dir: ' + out_d + ' cannot be created')
-    exit()
-# move the files
-for filename in glob.glob('simRef*'):
-    os.replace(filename, out_d + "/" + filename)
-for filename in glob.glob('simAlt*'):
-    os.replace(filename, out_d + "/" + filename)
-os.replace('ins2del.bed', out_d + '/ins2del.bed')
-
+    for i in range(reps):
+        print('[info]' + stamp() + 'simulation ' + str(i) + "/" + str(reps))
+        simulate()
+        organize_rep(i)
+# say goodbye
+print('[info]' + stamp() + " Simulation(s) completed!")
