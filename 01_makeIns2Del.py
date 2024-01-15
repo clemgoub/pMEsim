@@ -8,6 +8,8 @@ import random
 import sys
 import statistics
 import subprocess
+from alive_progress import alive_bar
+import time
 
 # Define a custom argument type for a list of integers
 def list_of_ints(arg):
@@ -100,58 +102,60 @@ target_chrom_seq = fasta[target_chrom]
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 # loop over each line of the bed file
-print('creating pMEI insertions/deletions VCF entries...')
+print('creating new reference pMEI to delete in the next round...')
 if args.verbose:
     print(repmask_subset)
-for index, repeat in repmask_subset.iterrows():
-    chrom = repeat['chrom']
-    start = repeat['start']
-    end = repeat['end']
+with alive_bar(len(repmask_subset.index)) as bar:
+    for index, repeat in repmask_subset.iterrows():
+        chrom = repeat['chrom']
+        start = repeat['start']
+        end = repeat['end']
 
-    # update in memory chromosome sequence
-    if current_chrom != chrom:
-        #print("Switching to " + chrom)
-        current_chrom = chrom
-        current_chrom_seq = fasta[current_chrom]
-    if args.verbose:
-        print("creating insertions from: " + chrom + '...')
-    # pick a random position within the target chromosome, avoid N
-    ref_sequence = 'N'
-    while ref_sequence == 'N':
-        rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
-        # get the 1 base at the site, will be the reference sequence
-        # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
-        ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
-    # now we need to add the TSD. We pick a random number within the tsd range
-    tsdrange = args.tsdrange
-    tsdR = range(tsdrange[0], tsdrange[1], 1) # we first make a range based on user input
-    tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
-    tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
-    if args.verbose:
-        print("TSD length = " + str(tsdL))
-        print("TSD = " + tsdSeq)
-    # get the sequence of the TE from the bed file, add the ref bp to if in 5', this is our alternative sequence
-    # we don't offset start because it is from a 0-based bed and we don't need the previous base, we insert only the TE
-    alt_sequence = ref_sequence + tsdSeq + current_chrom_seq[start : end - 1]
-    alt_len = len(alt_sequence)
-    # get TE name
-    rep_class = repeat['TE']
-    # create the VCF line
-    rec = vcfpy.Record(CHROM = target_chrom, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
-                       REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
-                       QUAL = 999, FILTER = ["PASS"], INFO = {"repClass" : rep_class, "SVLEN" : alt_len, "TSD" : tsdSeq},
-                       FORMAT = ["GT"],
-                    calls = [
-                        vcfpy.Call(sample = "sim",
-                                    data = vcfpy.OrderedDict(GT = 1))]
-                   )
-    if args.verbose:
-        print("went through!")
-    # write the line
-    writer.write_record(rec)
-    # store the position used
-    sim_pos.append(rnd_pos)
-writer.close()
+        # update in memory chromosome sequence
+        if current_chrom != chrom:
+            #print("Switching to " + chrom)
+            current_chrom = chrom
+            current_chrom_seq = fasta[current_chrom]
+        if args.verbose:
+            print("creating insertions from: " + chrom + '...')
+        # pick a random position within the target chromosome, avoid N
+        ref_sequence = 'N'
+        while ref_sequence == 'N':
+            rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
+            # get the 1 base at the site, will be the reference sequence
+            # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
+            ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
+        # now we need to add the TSD. We pick a random number within the tsd range
+        tsdrange = args.tsdrange
+        tsdR = range(tsdrange[0], tsdrange[1], 1) # we first make a range based on user input
+        tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
+        tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
+        if args.verbose:
+            print("TSD length = " + str(tsdL))
+            print("TSD = " + tsdSeq)
+        # get the sequence of the TE from the bed file, add the ref bp to if in 5', this is our alternative sequence
+        # we don't offset start because it is from a 0-based bed and we don't need the previous base, we insert only the TE
+        alt_sequence = ref_sequence + tsdSeq + current_chrom_seq[start : end - 1]
+        alt_len = len(alt_sequence)
+        # get TE name
+        rep_class = repeat['TE']
+        # create the VCF line
+        rec = vcfpy.Record(CHROM = target_chrom, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
+                           REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
+                           QUAL = 999, FILTER = ["PASS"], INFO = {"repClass" : rep_class, "SVLEN" : alt_len, "TSD" : tsdSeq},
+                           FORMAT = ["GT"],
+                        calls = [
+                            vcfpy.Call(sample = "sim",
+                                        data = vcfpy.OrderedDict(GT = 1))]
+                       )
+        if args.verbose:
+            print("went through!")
+        # write the line
+        writer.write_record(rec)
+        # store the position used
+        sim_pos.append(rnd_pos)
+    writer.close()
+    bar()
 
 #######################
 # simulate with simuG #
