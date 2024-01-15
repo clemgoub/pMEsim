@@ -154,8 +154,10 @@ with alive_bar(len(repmask_subset.index)) as bar:
         writer.write_record(rec)
         # store the position used
         sim_pos.append(rnd_pos)
+        # increase the progress bar
+        bar()
     writer.close()
-    bar()
+
 
 #######################
 # simulate with simuG #
