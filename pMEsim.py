@@ -124,6 +124,13 @@ def organize_rep(iter):
         os.replace('ins2del.bed', out_d + "/rep" + str(iter) + "/ins2del.bed")
     else:
     # simply move the files in the out_dir
+        # create the first subdir
+        try:
+            Path(out_d + "/rep" + str(iter)).mkdir(parents=True, exist_ok=True)
+        except OSError:
+            print('[ERROR!]' + stamp() + 'output dir: ' + out_d + "/rep" + str(iter) + ' cannot be created')
+            exit()            
+        # and write the ouput
         for filename in glob.glob('simRef*'):
             os.replace(filename, out_d + "/rep" + str(iter) + "/" + filename)
         for filename in glob.glob('simAlt*'):
@@ -137,7 +144,7 @@ if reps == 1:
     organize()
 else:
     for i in range(reps):
-        print('[info]' + stamp() + 'simulation ' + str(i+1) + "/" + str(reps))
+        print('[info]' + stamp() + ' simulation ' + str(i+1) + "/" + str(reps))
         simulate()
         organize_rep(i + 1)
 # say goodbye
