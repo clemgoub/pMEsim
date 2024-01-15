@@ -139,6 +139,6 @@ else:
     for i in range(reps):
         print('[info]' + stamp() + 'simulation ' + str(i+1) + "/" + str(reps))
         simulate()
-        organize_rep(i)
+        organize_rep(i + 1)
 # say goodbye
 print('[info]' + stamp() + " Simulation(s) completed!")
