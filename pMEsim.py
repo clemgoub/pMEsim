@@ -102,8 +102,8 @@ def organize():
 # function to organize the output with replicates
 def organize_rep(iter):
     ### organize the outputs
+    out_d = args.out_dir
     if iter == 1:
-        out_d = args.out_dir
         # create dir, equivalent to bash `mkdir -P`
         try:
             Path(out_d).mkdir(parents=True, exist_ok=True)
@@ -137,7 +137,7 @@ if reps == 1:
     organize()
 else:
     for i in range(reps):
-        print('[info]' + stamp() + 'simulation ' + str(i) + "/" + str(reps))
+        print('[info]' + stamp() + 'simulation ' + str(i+1) + "/" + str(reps))
         simulate()
         organize_rep(i)
 # say goodbye
