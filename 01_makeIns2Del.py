@@ -35,7 +35,7 @@ if (args.nb_var % 2) == 0:
     nb_var = args.nb_var
 else:
     nb_var = args.nb_var + 1
-    print("warning: you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
+    print("[WARNING] you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 target_fasta = args.target_fasta
 target_chrom = args.target_chrom
@@ -66,7 +66,7 @@ in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
 # here we want to use the del number from the ration, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
 if in_del_nb < ins_nb:
     print('*******')
-    print('ERROR!: not enough TEs in the bed file to insert in the target chromosome!')
+    print('[ERROR!] not enough TEs in the bed file to insert in the target chromosome!')
     print('*******')
     parser.print_help(sys.stderr)
     sys.exit(1)
@@ -102,10 +102,10 @@ target_chrom_seq = fasta[target_chrom]
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 # loop over each line of the bed file
-print('creating new reference pMEI to delete in the next round...')
+print('[info] creating new reference pMEI to delete in the next round...')
 if args.verbose:
     print(repmask_subset)
-with alive_bar(len(repmask_subset.index)) as bar:
+with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') as bar:
     for index, repeat in repmask_subset.iterrows():
         chrom = repeat['chrom']
         start = repeat['start']
@@ -165,7 +165,7 @@ with alive_bar(len(repmask_subset.index)) as bar:
 # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
 # Github https://github.com/yjx1217/simuG (MIT license)
 simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
-print('simulating genome [simuG]...')
+print('[info] simulating genome [simuG]...')
 if not args.verbose:
     simug_process = subprocess.Popen(str(simug_cmd), 
         shell = True, 
@@ -178,7 +178,7 @@ simug_process.wait()
 
 # report the new coordinates in bed format to delete in the next step
 if args.verbose:
-    print("saving ins2del coordinates in .bed")
+    print("[info] saving ins2del coordinates in .bed")
 # wrapping a bash 1-liner in sooooo many python lines! =)
 command = "paste <(awk 'NR > 1' simRef.refseq2simseq.map.txt | sort -k12,12 | cut -f 6-8) <(grep -v '#' simRef.vcf | sort -k3,3 | cut -f 8) | sed 's/repClass=//g;s/;SVLEN=/\\t/g;s/;TSD=/\\t/g' | awk '{print $1\"\\t\"$2\"\\t\"$3\"\\t\"$4\"\\t1000\\t.\\t\"$6}' > ins2del.bed"
 #command = """bash -c "paste <(awk 'NR > 1' simRef.refseq2simseq.map.txt | cut -f 6-8) <(grep -v '#' simRef.vcf | cut -f 8) | sed 's/repClass=//g;s/;SVLEN=/\t/g;s/;TSD=/\t/g' | awk '{print \\$1\"\t\"\\$2\"\t\"\\$3\"\t\"\\$4\"\t1000\t\\.\t\"$6}' > ins2del.bed" """
