@@ -63,17 +63,18 @@ bed_in_pre = pandas.read_csv(args.bed_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand', 'super'])
 # make sure the chromosomes of the bed file are in the reference genome
 bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
-# check input length to make sure we don't sample more than there is; here we only want to make insertions that will be later deleted.
-#in_del_nb = len(bed_in[bed_in['chrom'].isin([target_chrom])])
-in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
-# here we want to use the del number from the ratio, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
-if in_ins_nb < ins_nb:
-    print('*******')
-    print('[ERROR!]' + stamp() + ' not enough TEs in the bed file to insert in the target chromosome!')
-    print('*******')
-    parser.print_help(sys.stderr)
-    sys.exit(1)
 
+# THIS IS UNNECESSARY AS LONG AS YOU KEEP VARIANT NUMBER REASONABLE
+# # check input length to make sure we don't sample more than there is; here we only want to make insertions that will be later deleted.
+# #in_del_nb = len(bed_in[bed_in['chrom'].isin([target_chrom])])
+# in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
+# # here we want to use the del number from the ratio, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
+# if in_ins_nb < ins_nb:
+#     print('*******')
+#     print('[ERROR!]' + stamp() + ' not enough TEs in the bed file to insert in the target chromosome!')
+#     print('*******')
+#     parser.print_help(sys.stderr)
+#     sys.exit(1)
 
 # THIS OLD BLOCK WAS HUMAN-SPECIFIC
 # # sample the insertions (future deletions) according to predefined proportions
