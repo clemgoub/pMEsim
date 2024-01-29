@@ -112,13 +112,6 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         end = repeat['end']
         te = repeat['TE']
         sup = repeat['super']
-        # define TSD range according to superfamily
-        # tsdrange = []
-        if sup == "DTA":
-            tsdrange = [8,8]
-        else: # LTR
-            tsdrange = [4,6]
-
         # update in memory chromosome sequence
         if current_chrom != chrom:
             #print("Switching to " + chrom)
@@ -134,9 +127,13 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
             # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
             ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
         # now we need to add the TSD. We pick a random number within the tsd range
-        # tsdrange = args.tsdrange
-        tsdR = range(tsdrange[0], tsdrange[1], 1) # we first make a range based on user input
-        tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
+        # define TSD range according to superfamily
+        # tsdrange = []
+        if sup == "DTA":
+            tsdL = 8
+        else: # LTR
+            tsdR = range(4, 6, 1) # we first make a range based on user input
+            tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
         tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
         if args.verbose:
             print("TE = " + str(te) + " TSD length = " + str(tsdL))
