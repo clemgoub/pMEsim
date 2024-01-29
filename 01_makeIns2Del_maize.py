@@ -153,7 +153,7 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         alt_sequence = ref_sequence + tsdSeq + current_chrom_seq[start : end - 1]
         alt_len = len(alt_sequence)
         # get TE name
-        rep_class = repeat['TE'] + ";" + sup
+        rep_class = repeat['TE'] # + ";" + sup
         # create the VCF line
         rec = vcfpy.Record(CHROM = target_chrom, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
                            REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
