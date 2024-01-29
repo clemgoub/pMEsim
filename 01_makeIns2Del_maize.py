@@ -87,7 +87,7 @@ bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
 # repmask_subset = pandas.concat([bed_del, bed_ins], axis=0).reset_index().sort_values(by=['chrom', 'start'])
 
 # assign repmask_subset to bed_in instead of renaming all
-repmask_subset = bed_in
+repmask_subset = bed_in.sample(del_nb)
 if args.verbose:
     print(repmask_subset)
 # read and store the header
