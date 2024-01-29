@@ -26,7 +26,7 @@ parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total
 # the ratio ins/del is unknown a priori, so we go with 50/50
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .5) 
 # use Mo17 T2T refernce
-parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa.gz')
+parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa')
 # target is chromosome 10
 parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr10')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0__chr10__.fa')
