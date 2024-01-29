@@ -120,13 +120,11 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         te = repeat['TE']
         sup = repeat['super']
         # define TSD range according to superfamily
-        tsdrange = []
+        # tsdrange = []
         if sup == "DTA":
-            tsdrange[0] = 8
-            tsdrange[1] = 8
+            tsdrange = [8,8]
         else: # LTR
-            tsdrange[0] = 4
-            tsdrange[1] = 6
+            tsdrange = [4,6]
 
         # update in memory chromosome sequence
         if current_chrom != chrom:
