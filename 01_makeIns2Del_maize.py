@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import vcfpy
+import vcfpy # must be >= 0.13.7 or .8; not working with 0.12.x
 import argparse
 import pandas
 import pysam
@@ -76,18 +76,11 @@ bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
 #     parser.print_help(sys.stderr)
 #     sys.exit(1)
 
-# THIS OLD BLOCK WAS HUMAN-SPECIFIC
-# # sample the insertions (future deletions) according to predefined proportions
-# i_alu = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('Alu') & (bed_in['end']-bed_in['start'] >= 250)].sample(round(max(del_nb*te_props[0],1)))
-# i_line = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('L1') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(del_nb*te_props[1],1)))
-# i_sva = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('SVA') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(del_nb*te_props[2],1)))
-# # here I replaced "bed_ins" with "repmask_subset", as it is the file used later and I don't want to change names
-# repmask_subset = pandas.concat([i_alu, i_line, i_sva], axis=0).reset_index().sort_values(by=['chrom', 'start'])
+# sample the insertions (future deletions) according to predefined proportions (50/50 LTR/DTA)
+i_LTR = bed_in[-bed_in['chrom'].isin([target_chrom]) & (bed_in.super.str.match('Copia') | bed_in.super.str.match('Gypsy'))].sample(round(max(del_nb*0.5,1)))
+i_DTA = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.super.str.match('DTA')].sample(round(max(del_nb*0.5,1)))
 # concatenate
-# repmask_subset = pandas.concat([bed_del, bed_ins], axis=0).reset_index().sort_values(by=['chrom', 'start'])
-
-# assign repmask_subset to bed_in instead of renaming all
-repmask_subset = bed_in.sample(del_nb)
+repmask_subset = pandas.concat([i_LTR, i_DTA], axis=0).reset_index().sort_values(by=['chrom', 'start'])
 if args.verbose:
     print(repmask_subset)
 # read and store the header
@@ -153,19 +146,19 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         alt_sequence = ref_sequence + tsdSeq + current_chrom_seq[start : end - 1]
         alt_len = len(alt_sequence)
         # get TE name
-        rep_class = repeat['TE'] + ";" + sup
-        if args.verbose:
-            # DEBUG
-            print(target_chrom)
-            print(rnd_pos)
-            print(chrom)
-            print(start)
-            print(end)
-            print(ref_sequence)
-            print(alt_sequence)
-            print(rep_class)
-            print(alt_len)
-            print(tsdSeq)
+        rep_class = repeat['TE'] + "-_-" + sup
+        # if args.verbose:
+        #     # DEBUG
+        #     print(target_chrom)
+        #     print(rnd_pos)
+        #     print(chrom)
+        #     print(start)
+        #     print(end)
+        #     print(ref_sequence)
+        #     print(alt_sequence)
+        #     print(rep_class)
+        #     print(alt_len)
+        #     print(tsdSeq)
         # create the VCF line
         rec = vcfpy.Record(CHROM = target_chrom, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
                            REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
