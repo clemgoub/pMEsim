@@ -131,10 +131,11 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         # tsdrange = []
         if sup == "DTA":
             tsdL = 8
+            tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + tsdL]
         else: # LTR
             tsdR = range(4, 6, 1) # we first make a range based on user input
             tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
-        tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
+            tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
         if args.verbose:
             print("TE = " + str(te) + " TSD length = " + str(tsdL))
             print("TSD = " + tsdSeq)
