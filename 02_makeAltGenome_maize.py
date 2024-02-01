@@ -48,7 +48,7 @@ t_fasta = args.target_fasta
 target_chrom = args.target_chrom
 out_prefix = args.out_prefix
 # force the Alu, L1, SVA ratio to realistic values
-te_props = [0.7,0.2,0.1]
+# te_props = [0.7,0.2,0.1]
 # calculate ins/del number based on input
 ins_nb = round(ratio*nb_var)
 # here we don't need to sample the deletions are they are all set in the ins2del.bed file produced by step 01
