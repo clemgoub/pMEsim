@@ -79,6 +79,7 @@ bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
 # # split the TE column to get the superfamily as well ||| NOT NECESSARY!!!
 # bed_del[['TE','super']] = bed_del['TE'].str.split('-_-', expand=True)
 if args.verbose:
+    print("this is bed_del variable:")
     print(bed_del)
 # sample the insertions (future deletions) according to predefined proportions (50/50 LTR/DTA)
 i_LTR = bed_in[-bed_in['chrom'].isin([target_chrom]) & (bed_in.super.str.match('Copia') | bed_in.super.str.match('Gypsy'))].sample(round(max(del_nb*0.5,1)))
@@ -86,6 +87,7 @@ i_DTA = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.super.str.match('D
 # concatenate
 repmask_subset = pandas.concat([i_LTR, i_DTA], axis=0).reset_index().sort_values(by=['chrom', 'start'])
 if args.verbose:
+    print("this is repmask_subset variable:")
     print(repmask_subset)
 # read and store the header
 reader = vcfpy.Reader.from_path('header_maize.vcf')
@@ -111,7 +113,7 @@ sim_pos = []
 # loop over each line of the insertions bed file
 print('[info]' + stamp() + ' starting with insertions...')
 if args.verbose:
-    print(bed_ins)
+    print(bed_in)
 # create a blacklist of ranges that contains the TE to delete, so we don't insert in there
 # init a blacklist of position
 forbidden=[]
