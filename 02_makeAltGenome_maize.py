@@ -76,8 +76,8 @@ bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
 # read and store the loci to delete from ins2del.bed
 bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand', 'TSD'])
-# split the TE column to get the superfamily as well
-bed_del[['TE','super']] = bed_del['TE'].str.split('-_-', expand=True)
+# # split the TE column to get the superfamily as well ||| NOT NECESSARY!!!
+# bed_del[['TE','super']] = bed_del['TE'].str.split('-_-', expand=True)
 if args.verbose:
     print(bed_del)
 # sample the insertions (future deletions) according to predefined proportions (50/50 LTR/DTA)
@@ -238,14 +238,14 @@ for i in range(nb_var):
     randit_pos.append(j)
 
 # load the distribution of SV length for HG002
-sv_len_in = pandas.read_csv('HG002_SVs_Tier1_v0.6_filtered_SV_length', sep = '\t', names = ['SVchr', 'SVlen'])
+sv_len_in = pandas.read_csv('Yang2019_Maize_SV_length', sep = '\t', names = ['SVchr', 'SVlen'])
 # filter size to 100bp 
 sv_len = sv_len_in[(sv_len_in['SVlen'] < -100) | (sv_len_in['SVlen'] > 100)]
 # sample them
 randit_len = sv_len['SVlen'].sample(len(randit_pos))
 # sample some chromosomes
-randit_ins_chr = sv_len[sv_len['SVchr'] != 'chr22'].sample(round(.5*nb_var))['SVchr']
-randit_del_chr = sv_len[sv_len['SVchr'] == 'chr22'].sample(round(.5*nb_var))['SVchr']
+randit_ins_chr = sv_len[sv_len['SVchr'] != 'chr10'].sample(round(.5*nb_var))['SVchr']
+randit_del_chr = sv_len[sv_len['SVchr'] == 'chr10'].sample(round(.5*nb_var))['SVchr']
 #randit_chr = randit_ins_chr.append(randit_del_chr)
 randit_chr = pandas.concat([randit_ins_chr, randit_del_chr], axis = 0, ignore_index = True) #sv_len['SVchr'].sample(len(randit_pos))
 # combine in a table to iterate over
