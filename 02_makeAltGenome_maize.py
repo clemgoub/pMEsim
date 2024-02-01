@@ -52,7 +52,7 @@ out_prefix = args.out_prefix
 # calculate ins/del number based on input
 ins_nb = round(ratio*nb_var)
 # here we don't need to sample the deletions are they are all set in the ins2del.bed file produced by step 01
-# del_nb = nb_var - ins_nb #round(nb_var-(ratio*nb_var))
+del_nb = nb_var - ins_nb #round(nb_var-(ratio*nb_var))
 # load the reference genome
 fasta = pysam.FastaFile(ref_genome)
 # load the target genome (simRef)
