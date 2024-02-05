@@ -113,11 +113,8 @@ tc_len = len(target_chrom_seq) # sequence length of the target chromosome
 tc_max_start = tc_len - sim_len # remove sim_len to chromosome length to get the max start point according to sim_len
 sim_interval_start = random.randint(0, tc_max_start - 1) # base 0 of the simulated
 sim_interval_end = sim_interval_start + sim_len - 1 # last base of the simulated genome
-if args.verbose:
-    print(sim_interval_start)
-    print(sim_len)
 # finaly, simulate the chromosome string
-sim_chrom_seq = target_chrom_seq[int(sim_interval_start) - 1, int(sim_interval_end)]
+sim_chrom_seq = target_chrom_seq[sim_interval_start - 1: sim_interval_end]
 sim_chrom_name = target_chrom + "_" + str(sim_interval_start) + "_" + str(sim_interval_end)
 # write it to fasta for simuG
 with open("preRef.fa", "w") as pre_ref:
