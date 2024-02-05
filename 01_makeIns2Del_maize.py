@@ -117,7 +117,7 @@ sim_interval_end = sim_interval_start + sim_len - 1 # last base of the simulated
 sim_chrom_seq = target_chrom_seq[sim_interval_start - 1, sim_interval_end]
 sim_chrom_name = target_chrom + "_" + str(sim_interval_start) + "_" + str(sim_interval_end)
 # write it to fasta for simuG
-with pre_ref as open("preRef.fa", "w"):
+with open("preRef.fa", "w") as pre_ref:
     pre_ref.write(">" + sim_chrom_name + "\n" + sim_chrom_seq + "\n")
     pre_ref.close()
 # create an empty list to store the positions of the simulated ins/del (1-based)
