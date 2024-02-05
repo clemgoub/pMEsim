@@ -154,7 +154,7 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         # pick a random position within the target chromosome, avoid N
         ref_sequence = 'N'
         while ref_sequence == 'N':
-            rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
+            rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom)-100) # pad 100bp for TSD
             # get the 1 base at the site, will be the reference sequence
             # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
             ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
