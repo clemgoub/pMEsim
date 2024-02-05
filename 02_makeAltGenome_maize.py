@@ -25,7 +25,8 @@ parser = argparse.ArgumentParser(description='Create a simulated VCF file with r
 parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total number of variants to simulate', dest = 'nb_var', default = 100)
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .5)
 parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa') # same ref genome to get the INS TE from
-parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr10')
+# WE NEED TO REPLACE THIS WITH THE UNIQUE NAME EACH simRef has.
+#parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr10')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa.RMout_CopGypDTA4sim.bed') # same bed to take the INS coordinates
 parser.add_argument('-B', '--bed2', type=str, metavar='STR', help='bed file with simRef TEs to delete', dest = 'bed2_in', default = 'ins2del.bed') # new bed to take the DEL coordinates
@@ -45,7 +46,7 @@ else:
     print("[WARNING]" + stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 t_fasta = args.target_fasta
-target_chrom = args.target_chrom
+
 out_prefix = args.out_prefix
 # force the Alu, L1, SVA ratio to realistic values
 # te_props = [0.7,0.2,0.1]
@@ -56,7 +57,17 @@ del_nb = nb_var - ins_nb #round(nb_var-(ratio*nb_var))
 # load the reference genome
 fasta = pysam.FastaFile(ref_genome)
 # load the target genome (simRef)
+# but first, we need to remove ols index if exist
+for filename in glob.glob('./simRef.simseq.genome.fa.fai'):
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
+# this load and index the genome if no index present
 target_fasta = pysam.FastaFile(t_fasta)
+# get the name of the simulated chromosome
+target_chrom = target_fasta.references[0]
+
 # read and store the input bed file
 # read and store the input bed file; there is one more column that humans for "super-family"
 bed_in_pre = pandas.read_csv(args.bed_in, sep = '\t',
