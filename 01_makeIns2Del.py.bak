@@ -26,12 +26,11 @@ parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .7)
 parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/hg38.UCSC.1to22XY.fa.gz')
 parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
-# parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = '../simData/hg38.chr22.fa')
+parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = '../simData/hg38.chr22.fa')
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed')
 parser.add_argument('-R', '--tsdrange', type = list_of_ints, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
 parser.add_argument('-o', '--out', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix', default = 'simRef')
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
-parser.add_argument('-l', '--simlen', type = int, metavar='N', help='length of simulated chromosomes', dest = 'simlen', default = 10000000)
 # parse the arguments
 args = parser.parse_args()
 # store the input arguments
@@ -43,7 +42,7 @@ else:
     nb_var = args.nb_var + 1
     print("[WARNING]" +  stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
-#target_fasta = args.target_fasta
+target_fasta = args.target_fasta
 target_chrom = args.target_chrom
 out_prefix = args.out_prefix
 # force the Alu, L1, SVA ratio to realistic values
@@ -69,7 +68,7 @@ in_del_nb = len(bed_in[bed_in['chrom'].isin([target_chrom])])
 #     sys.exit(1)
 
 in_ins_nb = len(bed_in[-bed_in['chrom'].isin([target_chrom])])
-# here we want to use the del number from the ratio, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
+# here we want to use the del number from the ration, even though we make "insertions" -- this is because we need to insert the right number of TE to be later deleted.
 if in_del_nb < ins_nb:
     print('*******')
     print('[ERROR!]' + stamp() + ' not enough TEs in the bed file to insert in the target chromosome!')
@@ -98,29 +97,13 @@ writer = vcfpy.Writer.from_path(out_prefix + '.vcf', reader.header)
 #########################
 # Simulate TE ins / del #
 #########################
+# subset the bed file (repmask) for the chromosomes present in the reference genome
+# repmask_subset = repmask[repmask['chrom'].isin(fasta.references) ]
 # initialize the current chromosome and its sequence
 current_chrom = None
 current_chrom_seq = None
-
 # define which chromosome will receive the annotations
 target_chrom_seq = fasta[target_chrom]
-
-# HERE IS THE MAIN THING
-#target_chrom_seq = fasta[target_chrom]
-sim_len = args.simlen # set for 10Mb now, will change for a variable later
-target_chrom_seq = fasta[target_chrom] # instead of reading in our target genome; we create it from the reference genome.
-tc_len = len(target_chrom_seq) # sequence length of the target chromosome
-tc_max_start = tc_len - sim_len # remove sim_len to chromosome length to get the max start point according to sim_len
-sim_interval_start = random.randint(0, tc_max_start - 1) # base 0 of the simulated
-sim_interval_end = sim_interval_start + sim_len - 1 # last base of the simulated genome
-# finaly, simulate the chromosome string
-sim_chrom_seq = target_chrom_seq[sim_interval_start - 1: sim_interval_end]
-sim_chrom_name = target_chrom + "_" + str(sim_interval_start) + "_" + str(sim_interval_end)
-# write it to fasta for simuG
-with open("preRef.fa", "w") as pre_ref:
-    pre_ref.write(">" + sim_chrom_name + "\n" + sim_chrom_seq + "\n")
-    pre_ref.close()
-
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 # loop over each line of the bed file
@@ -143,18 +126,15 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         # pick a random position within the target chromosome, avoid N
         ref_sequence = 'N'
         while ref_sequence == 'N':
-            #rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
-            rnd_pos = random.randint(1,sim_len-100) # pad 100 bp at the end to avoid issues
+            rnd_pos = random.randint(1,fasta.get_reference_length(target_chrom))
             # get the 1 base at the site, will be the reference sequence
             # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
-            #ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
-            ref_sequence = sim_chrom_seq[rnd_pos - 1]
+            ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
         # now we need to add the TSD. We pick a random number within the tsd range
         tsdrange = args.tsdrange
         tsdR = range(tsdrange[0], tsdrange[1], 1) # we first make a range based on user input
         tsdL = random.sample(tsdR, 1) # then we sample 1 value in the range as our TSD length
-        #tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
-        tsdSeq = sim_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
+        tsdSeq = target_chrom_seq[rnd_pos : rnd_pos + int(tsdL[0])]
         if args.verbose:
             print("TSD length = " + str(tsdL))
             print("TSD = " + tsdSeq)
@@ -165,7 +145,7 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         # get TE name
         rep_class = repeat['TE']
         # create the VCF line
-        rec = vcfpy.Record(CHROM = sim_chrom_name, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
+        rec = vcfpy.Record(CHROM = target_chrom, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
                            REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
                            QUAL = 999, FILTER = ["PASS"], INFO = {"repClass" : rep_class, "SVLEN" : alt_len, "TSD" : tsdSeq},
                            FORMAT = ["GT"],
@@ -189,7 +169,7 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
 #######################
 # simuG is a general purpose genome simulator written by Jia-Xing Yue (GitHub ID: yjx1217)
 # Github https://github.com/yjx1217/simuG (MIT license)
-simug_cmd = str("perl simuG/simuG.pl -refseq preRef.fa -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
+simug_cmd = str("perl simuG/simuG.pl -refseq " + str(target_fasta) + " -indel_vcf " + str(out_prefix) + ".vcf -prefix " + str(out_prefix))
 print('[info]' + stamp() + ' simulating genome [simuG]...')
 if not args.verbose:
     simug_process = subprocess.Popen(str(simug_cmd), 
