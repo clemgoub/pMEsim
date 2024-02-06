@@ -27,7 +27,6 @@ parser = argparse.ArgumentParser(description='Create a simulated VCF file with r
 parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total number of variants to simulate', dest = 'nb_var', default = 100)
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .5)
 parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa') # same ref genome to get the INS TE from
-# WE NEED TO REPLACE THIS WITH THE UNIQUE NAME EACH simRef has.
 #parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr10')
 parser.add_argument('-C', '--og-target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'OG_target_chrom', default = 'chr10')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
@@ -91,11 +90,7 @@ bed_in = bed_in_pre[bed_in_pre['chrom'].isin(fasta.references)]
 # read and store the loci to delete from ins2del.bed
 bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand', 'TSD'])
-# # split the TE column to get the superfamily as well ||| NOT NECESSARY!!!
-# bed_del[['TE','super']] = bed_del['TE'].str.split('-_-', expand=True)
-if args.verbose:
-    print("this is bed_del variable:")
-    print(bed_del)
+
 # sample the insertions (future deletions) according to predefined proportions (50/50 LTR/DTA)
 i_LTR = bed_in[-bed_in['chrom'].isin([target_chrom]) & (bed_in.super.str.match('Copia') | bed_in.super.str.match('Gypsy'))].sample(round(max(del_nb*0.5,1)))
 i_DTA = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.super.str.match('DTA')].sample(round(max(del_nb*0.5,1)))
@@ -128,7 +123,7 @@ sim_pos = []
 # loop over each line of the insertions bed file
 print('[info]' + stamp() + ' starting with insertions...')
 if args.verbose:
-    print(bed_in)
+    print(repmask_subset)
 # create a blacklist of ranges that contains the TE to delete, so we don't insert in there
 # init a blacklist of position
 forbidden=[]
@@ -157,6 +152,9 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         ref_sequence = 'N'
         while ref_sequence == 'N':
             rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom)-100) # pad 100bp for TSD
+             # check it's not a position in the blacklist
+             while rnd_pos in forbidden:
+                rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom)-100)
             # get the 1 base at the site, will be the reference sequence
             # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
             ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair

@@ -11,6 +11,8 @@ import subprocess
 from alive_progress import alive_bar
 import time
 import datetime
+import glob
+import os
 
 # Define a custom argument type for a list of integers
 def list_of_ints(arg):
@@ -25,7 +27,8 @@ parser = argparse.ArgumentParser(description='Create a simulated VCF file with r
 parser.add_argument('-v', '--variants', type = int, metavar='N', help='the total number of variants to simulate', dest = 'nb_var', default = 100)
 parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insertion/deletion ratio', dest = 'ratio', default = .7)
 parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/hg38.UCSC.1to22XY.fa.gz') # same ref genome to get the INS TE from
-parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
+#parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr22')
+parser.add_argument('-C', '--og-target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'OG_target_chrom', default = 'chr22')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed') # same bed to take the INS coordinates
 parser.add_argument('-B', '--bed2', type=str, metavar='STR', help='bed file with simRef TEs to delete', dest = 'bed2_in', default = 'ins2del.bed') # new bed to take the DEL coordinates
@@ -45,7 +48,6 @@ else:
     print("[WARNING]" + stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 t_fasta = args.target_fasta
-target_chrom = args.target_chrom
 out_prefix = args.out_prefix
 # force the Alu, L1, SVA ratio to realistic values
 te_props = [0.7,0.2,0.1]
@@ -56,7 +58,17 @@ ins_nb = round(ratio*nb_var)
 # load the reference genome
 fasta = pysam.FastaFile(ref_genome)
 # load the target genome (simRef)
+# but first, we need to remove ols index if exist
+for filename in glob.glob('./simRef.simseq.genome.fa.fai'):
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
+# this load and index the genome if no index present
 target_fasta = pysam.FastaFile(t_fasta)
+# get the name of the simulated chromosome
+target_chrom = target_fasta.references[0]
+
 # read and store the input bed file
 bed_in_pre = pandas.read_csv(args.bed_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand'])
@@ -75,7 +87,7 @@ if in_ins_nb < ins_nb:
 bed_del = pandas.read_csv(args.bed2_in, sep = '\t',
                           names = ['chrom', 'start', 'end', 'TE', 'score', 'strand', 'TSD'])
 
-# sample the insertions (future deletions) according to predefined proportions
+# sample the insertions according to predefined proportions
 i_alu = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('Alu') & (bed_in['end']-bed_in['start'] >= 250)].sample(round(max(ins_nb*te_props[0],1)))
 i_line = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('L1') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(ins_nb*te_props[1],1)))
 i_sva = bed_in[-bed_in['chrom'].isin([target_chrom]) & bed_in.TE.str.match('SVA') & (bed_in['end']-bed_in['start'] >= 900)].sample(round(max(ins_nb*te_props[2],1)))
@@ -131,10 +143,10 @@ with alive_bar(len(bed_ins.index), bar = 'circles', spinner = 'classic') as bar:
         # pick a random position within the target chromosome, avoid N
         ref_sequence = 'N'
         while ref_sequence == 'N':
-            rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom))
+            rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom)-100) # pad 100bp for TSD
             # check it's not a position in the blacklist
             while rnd_pos in forbidden:
-                rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom))
+                rnd_pos = random.randint(1,target_fasta.get_reference_length(target_chrom)-100)
             # get the 1 base at the site, will be the reference sequence
             # we assume rnd_pos is 1-based (VCF). Thus we -1 it to get it in python
             ref_sequence = target_chrom_seq[rnd_pos - 1] # this is a single base-pair
@@ -235,8 +247,8 @@ sv_len = sv_len_in[(sv_len_in['SVlen'] < -100) | (sv_len_in['SVlen'] > 100)]
 # sample them
 randit_len = sv_len['SVlen'].sample(len(randit_pos))
 # sample some chromosomes
-randit_ins_chr = sv_len[sv_len['SVchr'] != 'chr22'].sample(round(.5*nb_var))['SVchr']
-randit_del_chr = sv_len[sv_len['SVchr'] == 'chr22'].sample(round(.5*nb_var))['SVchr']
+randit_ins_chr = sv_len[sv_len['SVchr'] != OG_chr].sample(round(.5*nb_var))['SVchr']
+randit_del_chr = sv_len[sv_len['SVchr'] == OG_chr].sample(round(.5*nb_var))['SVchr']
 #randit_chr = randit_ins_chr.append(randit_del_chr)
 randit_chr = pandas.concat([randit_ins_chr, randit_del_chr], axis = 0, ignore_index = True) #sv_len['SVchr'].sample(len(randit_pos))
 # combine in a table to iterate over
@@ -251,7 +263,7 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
         chrom = rnd['SVchr']
         rndlen = abs(rnd['SVlen'])
         # we take a random base on the chromosome (being careful not to go overboard)
-        if chrom == target_chrom:
+        if chrom == OG_chr:
             start = randit_pos[index]
             # check if the interval we will create is not intersecting a TE deletion on the target chromosome!
             end = start + rndlen
@@ -277,7 +289,7 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
                 print('random del...' + str(start) + ' ' + str(end) + ' passed!')
             # increment the list
             ins_site = start
-            row = {'chrom':chrom, 'start':start, 'end':end, 'name': 'sim' + str(index), 'type':'DEL', 'ins_site':ins_site}
+            row = {'chrom':target_chrom, 'start':start, 'end':end, 'name': 'sim' + str(index), 'type':'DEL', 'ins_site':ins_site}
             newline = pandas.DataFrame([row])
             val_rnd = pandas.concat([val_rnd, newline], axis = 0, ignore_index = True)
             # increment progress bar
@@ -318,7 +330,13 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
         if current_chrom != chrom:
             #print("Switching to " + chrom)
             current_chrom = chrom
-            current_chrom_seq = fasta[current_chrom]
+            if current_chrom == target_chrom:
+                # we take it from the simulated genome
+                current_chrom_seq = target_fasta[current_chrom]
+            else:
+                # we take it from the reference genome
+                current_chrom_seq = fasta[current_chrom]
+
         # if the bed chromosome is the same as the target chromosome, we will do a deletion
         if current_chrom == target_chrom:
             # for each line, update the reference and alternative sequence
