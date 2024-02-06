@@ -344,7 +344,11 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
         if current_chrom != chrom:
             #print("Switching to " + chrom)
             current_chrom = chrom
-            current_chrom_seq = fasta[current_chrom]
+            if current_chrom == target_chrom:
+                current_chrom_seq = target_fasta[current_chrom]
+            else:
+                current_chrom_seq = fasta[current_chrom]
+
         # if the bed chromosome is the same as the target chromosome, we will do a deletion
         if current_chrom == target_chrom:
             # for each line, update the reference and alternative sequence
