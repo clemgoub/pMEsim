@@ -29,6 +29,7 @@ parser.add_argument('-r', '--ratio', type = float, metavar='[0-1]', help='insert
 parser.add_argument('-g', '--genome', type = str, metavar='STR', help='reference genomes (fa/fa.gz)', dest = 'ref_genome', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa') # same ref genome to get the INS TE from
 # WE NEED TO REPLACE THIS WITH THE UNIQUE NAME EACH simRef has.
 #parser.add_argument('-t', '--target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'target_chrom', default = 'chr10')
+parser.add_argument('-C', '--og-target_chr', type = str, metavar='STR', help='name of target chromosome where insertion/deletion will be performed', dest = 'OG_target_chrom', default = 'chr10')
 parser.add_argument('-f', '--target_fasta', type = str, metavar='STR', help='fasta file for the target chromosome', dest = 'target_fasta', default = 'simRef.simseq.genome.fa') # now the target is the refSim genome (chr22)
 parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with reference insertions to use', dest = 'bed_in', default = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa.RMout_CopGypDTA4sim.bed') # same bed to take the INS coordinates
 parser.add_argument('-B', '--bed2', type=str, metavar='STR', help='bed file with simRef TEs to delete', dest = 'bed2_in', default = 'ins2del.bed') # new bed to take the DEL coordinates
@@ -48,8 +49,9 @@ else:
     print("[WARNING]" + stamp() + " you have asked for an odd number of variants  " + str(nb_var-1) + ",  " + str(nb_var) + " will be used instead.")
 ref_genome = args.ref_genome
 t_fasta = args.target_fasta
-
 out_prefix = args.out_prefix
+# OG_chr holds the original chromosome we used for simulation. Used to make the background deletion when picking interval length. If we see a OG chromosome (defaults maize chr10), we do a deletion.
+OG_chr = args.OG_target_chrom
 # force the Alu, L1, SVA ratio to realistic values
 # te_props = [0.7,0.2,0.1]
 # calculate ins/del number based on input
@@ -259,8 +261,8 @@ sv_len = sv_len_in[(sv_len_in['SVlen'] < -100) | (sv_len_in['SVlen'] > 100)]
 # sample them
 randit_len = sv_len['SVlen'].sample(len(randit_pos))
 # sample some chromosomes
-randit_ins_chr = sv_len[sv_len['SVchr'] != 'chr10'].sample(round(.5*nb_var))['SVchr']
-randit_del_chr = sv_len[sv_len['SVchr'] == 'chr10'].sample(round(.5*nb_var))['SVchr']
+randit_ins_chr = sv_len[sv_len['SVchr'] != OG_chr].sample(round(.5*nb_var))['SVchr']
+randit_del_chr = sv_len[sv_len['SVchr'] == OG_chr].sample(round(.5*nb_var))['SVchr']
 #randit_chr = randit_ins_chr.append(randit_del_chr)
 randit_chr = pandas.concat([randit_ins_chr, randit_del_chr], axis = 0, ignore_index = True) #sv_len['SVchr'].sample(len(randit_pos))
 # combine in a table to iterate over
@@ -275,7 +277,7 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
         chrom = rnd['SVchr']
         rndlen = abs(rnd['SVlen'])
         # we take a random base on the chromosome (being careful not to go overboard)
-        if chrom == target_chrom:
+        if chrom == OG_chr: # if the length if from the original chrom used for simulation, we do a deletion
             start = randit_pos[index]
             # check if the interval we will create is not intersecting a TE deletion on the target chromosome!
             end = start + rndlen
