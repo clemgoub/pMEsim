@@ -49,6 +49,8 @@ else:
 ref_genome = args.ref_genome
 t_fasta = args.target_fasta
 out_prefix = args.out_prefix
+# OG_chr holds the original chromosome we used for simulation. Used to make the background deletion when picking interval length. If we see a OG chromosome (defaults maize chr10), we do a deletion.
+OG_chr = args.OG_target_chrom
 # force the Alu, L1, SVA ratio to realistic values
 te_props = [0.7,0.2,0.1]
 # calculate ins/del number based on input
