@@ -303,7 +303,7 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
                 print('random del...' + str(start) + ' ' + str(end) + ' passed!')
             # increment the list
             ins_site = start
-            row = {'chrom':chrom, 'start':start, 'end':end, 'name': 'sim' + str(index), 'type':'DEL', 'ins_site':ins_site}
+            row = {'chrom':target_chrom, 'start':start, 'end':end, 'name': 'sim' + str(index), 'type':'DEL', 'ins_site':ins_site}
             newline = pandas.DataFrame([row])
             val_rnd = pandas.concat([val_rnd, newline], axis = 0, ignore_index = True)
             # increment progress bar
