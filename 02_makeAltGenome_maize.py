@@ -290,7 +290,7 @@ with alive_bar(len(randit_table.index), bar = 'circles', spinner = 'classic') as
                         # we retry
                         if args.verbose:
                             print('intersect simulated del ' + str(dels['start'].values[i-1]) + ' ' + str(dels['end'].values[i-1]) + ' Regenerate breakpoint...')
-                        start = random.randint(rndlen + 1,target_fasta.get_reference_length(chrom) - rndlen)
+                        start = random.randint(rndlen + 1,target_fasta.get_reference_length(target_chrom) - rndlen)
                         test = 'false'
                         break
                     else:
