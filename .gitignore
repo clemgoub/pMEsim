@@ -10,3 +10,4 @@ simAlt.simseq.genome.fa
 simAlt.vcf
 simRef.simseq.genome.fa.fai
 checkbed.bed
+.DS_Store
