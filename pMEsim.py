@@ -80,18 +80,18 @@ def simulate():
     ### according to verbose or not, we have two ways per command:
     if args.model == "human":
         if args.verbose:
-            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1) + " -V")
-            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1) + " -V")
+            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
         else:
-            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1))
-            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
+            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1))
+            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
     if args.model == "maize":
         if args.verbose:
-            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1) + " -V")
-            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1) + " -V")
+            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
         else:
-            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1))
-            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed_in) + " -t " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
+            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1))
+            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
 
     ### actually run the scripts
     if args.verbose:
