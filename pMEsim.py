@@ -42,19 +42,20 @@ args = parser.parse_args()
 
 if args.model == "human":
     ratio = 0.7
-    ref_genome = '../simData/hg38.UCSC.1to22XY.fa.gz'
+    ref_genome = '/project/rrg-bourqueg-ad/GraffiTE/Revisions/Simulations/simData/hg38.UCSC.1to22XY.fa.gz'
     target_chr = 'chr22'
-    bed = '../simData/hg38.AluY.L1HSPA2.SVA_EF.bed'
+    bed = '/project/rrg-bourqueg-ad/GraffiTE/Revisions/Simulations/simData/hg38.AluY.L1HSPA2.SVA_EF.bed'
     tsdrange = '4,22'
     
 if args.model == "maize":
     ratio = 0.5
-    ref_genome = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa'
+    ref_genome = '/project/rrg-bourqueg-ad/GraffiTE/Revisions/Simulations/simData/Zm-Mo17-REFERENCE-CAU-2.0.fa'
     target_chr = 'chr10'
-    bed = '../simData/Zm-Mo17-REFERENCE-CAU-2.0.fa.RMout_CopGypDTA4sim.bed'
+    bed = '/project/rrg-bourqueg-ad/GraffiTE/Revisions/Simulations/simData/Zm-Mo17-REFERENCE-CAU-2.0.fa.RMout_CopGypDTA4sim.bed'
     # no TSD range in maize
     
-
+# find where the scripts are
+pMEsim_path = os.path.dirname(os.path.realpath(__file__))
 
 #########
 
@@ -80,18 +81,18 @@ def simulate():
     ### according to verbose or not, we have two ways per command:
     if args.model == "human":
         if args.verbose:
-            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1) + " -V")
-            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+            command01 = str("python3 " + str(pMEsim_path) + "/01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1) + " -V")
+            command02 = str("python3 " + str(pMEsim_path) + "/02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
         else:
-            command01 = str("python3 " + "01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1))
-            command02 = str("python3 " + "02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
+            command01 = str("python3 " + str(pMEsim_path) + "/01_makeIns2Del.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -R " + str(tsdrange) + " -o " + str(args.out_prefix1))
+            command02 = str("python3 " + str(pMEsim_path) + "/02_makeAltGenome.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -R " + str(tsdrange) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
     if args.model == "maize":
         if args.verbose:
-            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1) + " -V")
-            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
+            command01 = str("python3 " + str(pMEsim_path) + "/01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1) + " -V")
+            command02 = str("python3 " + str(pMEsim_path) + "/02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2) + " -V")
         else:
-            command01 = str("python3 " + "01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1))
-            command02 = str("python3 " + "02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
+            command01 = str("python3 " + str(pMEsim_path) + "/01_makeIns2Del_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -t " + str(target_chr) + " -o " + str(args.out_prefix1))
+            command02 = str("python3 " + str(pMEsim_path) + "/02_makeAltGenome_maize.py " + "-v " + str(args.nb_var) + " -r " + str(ratio) + " -g " + str(ref_genome) + " -b " + str(bed) + " -C " + str(target_chr) + " -f " + str(args.target_fasta2) + " -B " + str(args.bed2_in) + " -o " + str(args.out_prefix2))
 
     ### actually run the scripts
     if args.verbose:
