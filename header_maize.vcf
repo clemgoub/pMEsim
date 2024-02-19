@@ -1,0 +1,14 @@
+##fileformat=VCFv4.2
+##reference=Zm-Mo17-REFERENCE-CAU-2.0__chr10__.fa
+##contig=<ID=chr10,length=149826620,assembly=Zm-Mo17-REFERENCE-CAU-2.0__chr10__.fa>
+##FILTER=<ID=PASS,Description="All 
+filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=repClass,Number=1,Type=String,Description="TE 
+name">
+##INFO=<ID=TSD,Number=1,Type=String,Description="TSD 
+sequence">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="Length 
+of insertion(+)/deletion(-) in bp">
+#CHROM	POS	ID	REF	ALT	
+QUAL	FILTER	INFO	FORMAT	sample
