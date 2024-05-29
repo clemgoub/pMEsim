@@ -39,6 +39,7 @@ parser.add_argument('-b', '--bed', type=str, metavar='STR', help='bed file with 
 #parser.add_argument('-R', '--tsdrange', type = list_of_ints, metavar='min,max', help='TSD length range', dest = 'tsdrange', default = '4,22' )
 parser.add_argument('-o', '--out', type=str, metavar='STR', help='output file prefix (will be <prefix>.vcf)', dest = 'out_prefix', default = 'simRef')
 parser.add_argument('-V', '--verbose', action="store_true", help="increase output verbosity")
+parser.add_argument('-l', '--simlen', type = int, metavar='N', help='length of simulated chromosomes', dest = 'simlen', default = 10000000)
 # parse the arguments
 args = parser.parse_args()
 
@@ -107,7 +108,7 @@ current_chrom_seq = None
 
 # HERE IS THE MAIN THING
 #target_chrom_seq = fasta[target_chrom]
-sim_len = 10000000 # set for 10Mb now, will change for a variable later
+sim_len = args.simlen # set for 10Mb now, will change for a variable later
 target_chrom_seq = fasta[target_chrom] # instead of reading in our target genome; we create it from the reference genome.
 tc_len = len(target_chrom_seq) # sequence length of the target chromosome
 tc_max_start = tc_len - sim_len # remove sim_len to chromosome length to get the max start point according to sim_len
@@ -120,6 +121,7 @@ sim_chrom_name = target_chrom + "_" + str(sim_interval_start) + "_" + str(sim_in
 with open("preRef.fa", "w") as pre_ref:
     pre_ref.write(">" + sim_chrom_name + "\n" + sim_chrom_seq + "\n")
     pre_ref.close()
+
 # create an empty list to store the positions of the simulated ins/del (1-based)
 sim_pos = []
 # loop over each line of the bed file
@@ -168,18 +170,6 @@ with alive_bar(len(repmask_subset.index), bar = 'circles', spinner = 'classic') 
         alt_len = len(alt_sequence)
         # get TE name
         rep_class = repeat['TE'] + "-_-" + sup
-        # if args.verbose:
-        #     # DEBUG
-        #     print(target_chrom)
-        #     print(rnd_pos)
-        #     print(chrom)
-        #     print(start)
-        #     print(end)
-        #     print(ref_sequence)
-        #     print(alt_sequence)
-        #     print(rep_class)
-        #     print(alt_len)
-        #     print(tsdSeq)
         # create the VCF line
         rec = vcfpy.Record(CHROM = sim_chrom_name, POS = rnd_pos, ID = ['pMEI_INS_' + chrom + "_" + str(start) + "_" + str(end)],
                            REF = ref_sequence, ALT = [vcfpy.Substitution("INS", alt_sequence)],
